@@ -1,4 +1,5 @@
 dbpath: webpvt.db
+port: 3000
 mailgun:
   api_key: ABCDEF
   domain: mailer.domain.com

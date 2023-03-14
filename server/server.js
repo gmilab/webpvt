@@ -101,4 +101,4 @@ router.post('/end', async (req, res) => {
 
 app.use('/api', router);
 app.use('/', express.static('../frontend'));
-app.listen(3000, () => console.log('Listening on port 3000!'));
+app.listen(config.port, () => console.log('Listening on port ' + config.port + '!'));
