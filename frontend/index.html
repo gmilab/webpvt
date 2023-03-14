@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Ibrahim Lab Psychomotor Vigilance Task</title>
+        <link rel="stylesheet" href="index.css">
+    </head>
+    <body>
+        <div class="container">
+            <div id="welcome" class="card">
+                <h3>Take the SickKids reaction time challenge!</h3>
+
+                <div id="registration">
+                    <b>Enter subject ID</b>
+                    <input type="text" id="subject_id" autofocus>
+                    <button id="btn_start">Register</button>
+                </div>
+
+                <div id="ready" class="d-none">
+                    <p><b>Instructions</b><br />Tap the screen or press the spacebar as fast as you can when the cube changes to blue.</p>
+                    <p><b>Ready?</b>
+                    Tap or press space to begin!</p>
+                </div>
+            </div>
+            <div id="thanks" class="card d-none">
+                <h3>Great job!</h3>
+                <p></p>
+            </div>
+            <div id="too_late" class="card d-none">
+                <h3>Too slow!</h3>
+                <p>Remember to tap the screen or press space as soon as the cube changes to blue!</p>
+                <p>Tap or press space to try again.</p>
+            </div>
+            <div id="stim_cube" class="d-none"></div>
+        </div>
+        <script src="index.js"></script>
+    </body>
+</html>
