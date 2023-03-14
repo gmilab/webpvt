@@ -1,0 +1,6 @@
+dbpath: webpvt.db
+mailgun:
+  api_key: ABCDEF
+  domain: mailer.domain.com
+  from: webpvt@mailer.domain.com
+  to: simeon.wong@sickkids.ca
