@@ -156,7 +156,14 @@ function handle_button_press(e) {
 }
 
 document.getElementById("btn_start").addEventListener("click", prepare_game);
-document.body.addEventListener("click", (e) => handle_button_press(e));
+document.body.addEventListener("touchstart", (e) => {
+    // during time-sensitive states, use touchstart instead of mousedown
+    if (window.state === 3 || window.state === 4) {
+        e.preventDefault();
+        handle_button_press(e);
+    }
+});
+document.body.addEventListener("mousedown", (e) => handle_button_press(e));
 document.body.addEventListener("keydown", (e) => {
     if (e.key === ' ') {
         handle_button_press(e);
