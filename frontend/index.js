@@ -18,6 +18,10 @@ window.stim_cube = document.getElementById("stim_cube");
 
 window.missed_timer = null;
 
+// gamepad
+window.current_gamepad = null;
+window.gamepad_timer = null;
+
 
 
 
@@ -91,12 +95,49 @@ function show_stim_cb(ctime) {
         // record stim action
         setTimeout(() => record_action(ctime, 'stim'), 5);
 
+        if (window.current_gamepad !== null) {
+            set_gamepad_timer();
+        }
+
         // set missed response timeout
         window.missed_timer = setTimeout(too_late, 10000);
     } else {
         // check again next frame
         requestAnimationFrame(show_stim_cb);
     }
+}
+
+function read_gamepad() {
+    const ts = performance.now();
+
+    // check state
+    const gp = navigator.getGamepads()[window.current_gamepad];
+    if (!gp) {
+        stop_gamepad_timer();
+        return;
+    }
+
+    // check X Y A B LB RB buttons
+    for (let ii = 0; ii < 6; ii++) {
+        if (gp.buttons[ii].pressed) {
+            stop_gamepad_timer();
+            handle_button_press({ timeStamp: ts });
+            return;
+        }
+    }
+}
+
+function set_gamepad_timer() {
+    if (window.gamepad_timer) {
+        stop_gamepad_timer();
+    }
+
+    window.gamepad_timer = setInterval(read_gamepad, 1);
+}
+
+function stop_gamepad_timer() {
+    clearInterval(window.gamepad_timer);
+    window.gamepad_timer = null;
 }
 
 function too_late() {
@@ -145,7 +186,7 @@ function handle_button_press(e) {
     } else if (window.state === 4) {
         record_action(e.timeStamp, 'response');
         begin_stim_block();
-    } else if (window.state == 6) {
+    } else if (window.state == 6) {  // if currently on "too late" screen
         // continue next trial
         document.getElementById("too_late").classList.add("d-none");
         document.getElementById("stim_cube").classList.remove("d-none");
@@ -155,7 +196,10 @@ function handle_button_press(e) {
     // otherwise do nothing
 }
 
+// begin events
 document.getElementById("btn_start").addEventListener("click", prepare_game);
+
+// RT events
 document.body.addEventListener("touchstart", (e) => {
     // during time-sensitive states, use touchstart instead of mousedown
     if (window.state === 3 || window.state === 4) {
@@ -167,5 +211,21 @@ document.body.addEventListener("mousedown", (e) => handle_button_press(e));
 document.body.addEventListener("keydown", (e) => {
     if (e.key === ' ') {
         handle_button_press(e);
+    }
+});
+
+window.addEventListener("gamepadconnected", (e) => {
+    console.log(
+        "Gamepad connected at index %d: %s. %d buttons, %d axes.",
+        e.gamepad.index,
+        e.gamepad.id,
+        e.gamepad.buttons.length,
+        e.gamepad.axes.length
+    );
+    let gamepads = navigator.getGamepads().filter((g) => g !== null && String(g.id).toUpperCase().includes('GAMEPAD'));
+    window.current_gamepad = gamepads[0].index;
+
+    if (window.state === 2) {
+        set_gamepad_timer();
     }
 });
