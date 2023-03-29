@@ -22,6 +22,19 @@ window.missed_timer = null;
 window.current_gamepad = null;
 window.gamepad_timer = null;
 
+// serial
+window.serialiface = null;
+window.serialwriter = null;
+window.serial_testseq_index = null;
+
+window.trig_vals = {
+    'stim': new Uint8Array([2 ** 0]),
+    'response': new Uint8Array([2 ** 1]),
+    'falsestart': new Uint8Array([2 ** 2]),
+    'missed': new Uint8Array([2 ** 3]),
+    'end': new Uint8Array([2 ** 4]),
+    'start': new Uint8Array([2 ** 5]),
+};
 
 
 
@@ -50,9 +63,49 @@ async function prepare_game() {
     window.state = 2;
 }
 
+async function prepare_serial() {
+    const port = await navigator.serial
+        .requestPort({ filters: [{ usbVendorId: 0x2341 }] });
+    window.serialiface = port;
+    if (!port.writeable) {
+        await port.open({ baudRate: 9600 });
+    }
+    window.serialwriter = port.writable.getWriter();
+    console.log("Serial port opened:", port);
+
+    document.getElementById("btn_trig").outerHTML = '<p class="text-success">✓ MMBT Trigger Interface connected</p>';
+
+    write_test_sequence();
+}
+
+function write_test_sequence() {
+    console.log('writing test sequence: ' + window.serial_testseq_index);
+    let cindex;
+    if (window.serial_testseq_index === null) {
+        window.serial_testseq_index = 0;
+    }
+
+    if (window.serial_testseq_index <= 7) {
+        cindex = window.serial_testseq_index;
+    } else if (window.serial_testseq_index <= 15) {
+        cindex = 15 - window.serial_testseq_index;
+    } else {
+        window.serial_testseq_index = null;
+        return;
+    }
+    window.serialwriter.write(new Uint8Array([Math.pow(2, cindex)]));
+
+    window.serial_testseq_index++;
+    setTimeout(write_test_sequence, 100);
+}
+
 function end_game(time) {
     window.state = 5;
     document.getElementById("stim_cube").classList.add("d-none");
+
+    if (window.serialwriter) {
+        window.serialwriter.write(window.trig_vals['end']);
+    }
 
     // show mean reaction time
     const meanrt = rtlog.reduce((a, b) => a + b, 0) / rtlog.length;
@@ -93,6 +146,9 @@ function show_stim_cb(ctime) {
         window.state = 4;
 
         // record stim action
+        if (window.serialwriter) {
+            window.serialwriter.write(window.trig_vals['stim']);
+        }
         setTimeout(() => record_action(ctime, 'stim'), 5);
 
         if (window.current_gamepad !== null) {
@@ -178,19 +234,33 @@ function handle_button_press(e) {
     if (window.state === 2) {
         // start game
         window.state = 3;
-        window.start_time = performance.now();
+        window.start_time = e.timeStamp;
+
+        if (window.serialwriter) {
+            window.serialwriter.write(window.trig_vals['start']);
+        }
+
         record_action(e.timeStamp, 'start');
         begin_stim_block();
     } else if (window.state === 3) {
+        if (window.serialwriter) {
+            window.serialwriter.write(window.trig_vals['falsestart']);
+        }
         record_action(e.timeStamp, 'falsestart');
+
     } else if (window.state === 4) {
+        if (window.serialwriter) {
+            window.serialwriter.write(window.trig_vals['response']);
+        }
         record_action(e.timeStamp, 'response');
         begin_stim_block();
+
     } else if (window.state == 6) {  // if currently on "too late" screen
         // continue next trial
         document.getElementById("too_late").classList.add("d-none");
         document.getElementById("stim_cube").classList.remove("d-none");
         begin_stim_block();
+
     }
 
     // otherwise do nothing
@@ -198,6 +268,8 @@ function handle_button_press(e) {
 
 // begin events
 document.getElementById("btn_start").addEventListener("click", prepare_game);
+document.getElementById("btn_trig").addEventListener("click", prepare_serial);
+document.getElementById("btn_advanced").addEventListener("click", () => document.getElementById("pn_advanced").classList.toggle("d-none"));
 
 // RT events
 document.body.addEventListener("touchstart", (e) => {
@@ -228,4 +300,8 @@ window.addEventListener("gamepadconnected", (e) => {
     if (window.state === 2) {
         set_gamepad_timer();
     }
+
+    let status_gamepad = document.getElementById("status_gamepad");
+    status_gamepad.innerText = "✓ Gamepad connected";
+    status_gamepad.classList.add("text-success");
 });

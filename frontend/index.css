@@ -38,13 +38,24 @@ h3 {
     text-align: center;
 }
 
-#btn_start {
+.btn {
     margin-top: 0.7rem;
     background-color: royalblue;
     padding: 0.5rem;
     width: 50%;
     color: #fff;
     border: darkblue 1px solid;
+}
+
+.btn_dark {
+    background-color: #001a42;
+}
+
+.btn_muted {
+    background-color: #999;
+    color: #333;
+    font-size: 0.6rem;
+    padding: 0.1rem 1rem;
 }
 
 #stim_cube {
@@ -60,4 +71,8 @@ h3 {
 
 .d-none {
     display: none;
+}
+
+.text-success {
+    color: rgb(0, 115, 0);
 }
