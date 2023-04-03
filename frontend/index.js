@@ -65,7 +65,7 @@ async function prepare_game() {
 
 async function prepare_serial() {
     const port = await navigator.serial
-        .requestPort({ filters: [{ usbVendorId: 0x2341 }] });
+        .requestPort({ filters: [{ usbVendorId: 0x2341 }, { usbVendorId: 0x2a03 }] });
     window.serialiface = port;
     if (!port.writeable) {
         await port.open({ baudRate: 9600 });
