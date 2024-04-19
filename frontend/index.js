@@ -73,9 +73,11 @@ async function prepare_serial() {
     window.serialwriter = port.writable.getWriter();
     console.log("Serial port opened:", port);
 
-    document.getElementById("btn_trig").outerHTML = '<p class="text-success">✓ MMBT Trigger Interface connected</p>';
+    document.getElementById("btn_trig").outerHTML = `<p class="text-success">✓ MMBT Trigger Interface connected</p>
+            <button class="btn btn-primary" id="btn_trigtest">Trigger test</button>`;
 
     write_test_sequence();
+    document.getElementById("btn_trigtest").addEventListener("click", write_test_sequence);
 }
 
 function write_test_sequence() {
@@ -204,7 +206,44 @@ function too_late() {
     document.getElementById("too_late").classList.remove("d-none");
 }
 
+function wait_for_gamepad_release() {
+    const gp = navigator.getGamepads()[window.current_gamepad];
+    if(gp.buttons.some((b) => b.pressed)) {
+        if (!window.btnhold_timer) {
+            window.btnhold_timer = setTimeout(wait_for_gamepad_release, 100);
+            window.btnhold_timeout = performance.now() + 3000;
+        } else if (performance.now() > window.btnhold_timeout) {
+            // show release button message
+            document.getElementById("release_btn").classList.remove("d-none");
+            document.getElementById("stim_cube").classList.add("d-none");
+        }
+    } else {
+        // stop the release check timer
+        clearTimeout(window.btnhold_timer);
+        window.btnhold_timer = null;
+
+        // hide release button message
+        document.getElementById("release_btn").classList.add("d-none");
+        document.getElementById("stim_cube").classList.remove("d-none");
+
+        // begin the next trial
+        begin_stim_block();
+    }
+}
+
 function begin_stim_block() {
+    // check if any buttons are currently pressed. if yes, don't begin yet.
+    if (window.current_gamepad !== null) {
+        const gp = navigator.getGamepads()[window.current_gamepad];
+        for (let ii = 0; ii < gp.buttons.length; ii++) {
+            if (gp.buttons[ii].pressed) {
+                wait_for_gamepad_release();
+                return;
+            }
+        }
+    }
+
+
     if (window.missed_timer) {
         clearTimeout(window.missed_timer);
         window.missed_timer = null;
