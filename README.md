@@ -1,5 +1,4 @@
 # Web-based psychomotor vigilance task
-Simeon Wong
 
 [![DOI](https://zenodo.org/badge/614097343.svg)](https://doi.org/10.5281/zenodo.15009246) 
 
